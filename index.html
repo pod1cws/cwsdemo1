@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Click to Copy Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .container {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .header {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .header:hover {
+            background-color: #e0f7fa;
+        }
+
+        .copy-feedback {
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #4caf50;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">Small Cap - High of Day Momentum</div>
+        <div class="content">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</div>
+    </div>
+
+    <div class="container">
+        <div class="header">Low Float Top Gainers</div>
+        <h1>CWSDEMO</h1>
+        <div class="content">Curabitur suscipit, nisi quis pretium cursus.</div>
+    </div>
+
+    <div class="container">
+        <div class="header">Top Gainers</div>
+        <div class="content">Nullam in eros justo, id dignissim ante.</div>
+    </div>
+
+    <div class="container">
+        <div class="header">Other Header</div>
+        <div class="content">Quisque sit amet ante nec libero faucibus convallis.</div>
+    </div>
+
+    <script>
+        (function() {
+            var VERSION = "CLICK_TO_COPY_FINAL";
+
+            // Basic allowed pattern detection — keep simple
+            var allowedHeaderPatterns = [
+                "Small Cap - High of Day Momentum",
+                "Low Float Top Gainers",
+                "Top Gainers"
+            ];
+
+            function cleanText(t) {
+                return (t || "").trim().replace(/\s+/g, " ");
+            }
+
+            function headerMatchesPattern(h) {
+                if (!h) return false;
+                var ch = cleanText(h).toLowerCase();
+                for (var i = 0; i < allowedHeaderPatterns.length; i++) {
+                    if (ch.indexOf(allowedHeaderPatterns[i].toLowerCase()) !== -1) return true;
+                }
+                return false;
+            }
+
+            function tryClipboardWrite(txt) {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    try {
+                        navigator.clipboard.writeText(txt).catch(function() {
+                            fallbackCopyToClipboard(txt);
+                        });
+                    } catch (e) {
+                        fallbackCopyToClipboard(txt);
+                    }
+                } else {
+                    fallbackCopyToClipboard(txt);
+                }
+            }
+
+            function fallbackCopyToClipboard(txt) {
+                try {
+                    var ta = document.createElement("textarea");
+                    ta.value = txt;
+                    ta.style.position = "fixed";
+                    ta.style.left = "-9999px";
+                    ta.style.top = "0";
+                    document.body.appendChild(ta);
+                    ta.focus();
+                    ta.select();
+                    document.execCommand("copy");
+                    document.body.removeChild(ta);
+                } catch (e) {
+                    // silent
+                }
+            }
+
+            function handler(ev) {
+                try {
+                    if (!ev || !ev.target) return;
+                    if (typeof ev.target.closest === "function" && ev.target.closest("input, textarea, select, [contenteditable], [role='textbox'], .EmojiTextInput-input, .MuiInputBase-root")) {
+                        return;
+                    }
+
+                    var inAllowed = false;
+                    if (headerMatchesPattern(ev.target.innerText)) {
+                        inAllowed = true;
+                    }
+
+                    if (!inAllowed) return;
+
+                    var raw = (ev.target.textContent || ev.target.innerText || "").trim();
+                    if (!raw) return;
+                    var firstWord = raw.split(/\s+/)[0];
+                    if (!firstWord || !/^[A-Z]{1,7}$/.test(firstWord)) return;
+
+                    // Synchronously attempt clipboard write during the real user gesture
+                    tryClipboardWrite(firstWord);
+
+                    // lightweight visual feedback
+                    try {
+                        var el = ev.target;
+                        var prev = el.style.backgroundColor;
+                        el.style.transition = "background-color 0.22s";
+                        el.style.backgroundColor = "#90EE90";
+                        setTimeout(function() {
+                            el.style.backgroundColor = prev;
+                        }, 260);
+                    } catch (e) {}
+                } catch (e) {
+                    // silent
+                }
+            }
+
+            window.__CLICK_COPY_HANDLER = handler;
+
+            // Use mouseup to capture clicks
+            try {
+                document.addEventListener("mouseup", handler, {
+                    passive: true,
+                    capture: false
+                });
+            } catch (e) {
+                document.addEventListener("mouseup", handler, false);
+            }
+
+            console.log("[" + VERSION + "] Injected and ACTIVE.");
+        })();
+    </script>
+</body>
+</html>
+
